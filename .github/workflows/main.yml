@@ -7,59 +7,13 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-
-    - name: Install system dependencies
+    - name: Build APK with Buildozer in Docker
       run: |
-        sudo apt update
-        sudo apt install -y git zip unzip openjdk-17-jdk autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
-
-    - name: Install buildozer & cython
-      run: |
-        pip install --upgrade pip
-        pip install buildozer cython
-
-    - name: Use patched python-for-android
-      run: |
-        git clone --depth 1 --branch master https://github.com/opacam/python-for-android.git /tmp/p4a
-        mkdir -p ~/.local/share/python-for-android
-        rm -rf ~/.local/share/python-for-android
-        cp -r /tmp/p4a ~/.local/share/python-for-android
-
-    - name: Setup Android SDK (command line tools)
-      run: |
-        mkdir -p $HOME/sdk/cmdline-tools
-        cd $HOME/sdk/cmdline-tools
-        wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
-        unzip -q commandlinetools-linux-9477386_latest.zip
-        mv cmdline-tools latest
-        # Создаём символическую ссылку для совместимости со старыми инструментами (Buildozer ищет tools/bin/sdkmanager)
-        ln -sf $HOME/sdk/cmdline-tools/latest $HOME/sdk/tools
-        export ANDROID_HOME=$HOME/sdk
-        export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
-        yes | sdkmanager --licenses
-        sdkmanager "platform-tools" "platforms;android-30" "build-tools;30.0.3"
-
-    - name: Setup Android NDK
-      run: |
-        cd $HOME
-        wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
-        unzip -q android-ndk-r25b-linux.zip
-        mkdir -p .buildozer/android/platform
-        mv android-ndk-r25b .buildozer/android/platform/
-
-    - name: Build APK
-      run: buildozer -v android debug
-      env:
-        ANDROID_HOME: /home/runner/sdk
-        ANDROID_SDK_ROOT: /home/runner/sdk
+        docker run --rm -v ${{ github.workspace }}:/project -w /project kivy/buildozer:latest /bin/bash -c "yes | buildozer -v android debug"
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
