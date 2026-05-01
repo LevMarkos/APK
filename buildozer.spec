@@ -17,6 +17,7 @@ android.build_tools = 30.0.3
 android.accept_sdk_license = True
 android.sdk_path = /home/runner/sdk
 android.ndk_path = /home/runner/.buildozer/android/platform/android-ndk-r25b
+android.cmdline_tools_path = /home/runner/sdk/cmdline-tools/latest
 
 p4a.local_recipes = /home/runner/.local/share/python-for-android
 p4a.branch = master
