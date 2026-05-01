@@ -9,14 +9,18 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-
-    - name: Build APK with Buildozer in Docker
-      run: |
-        docker run --rm -v ${{ github.workspace }}:/project -w /project kivy/buildozer:latest /bin/bash -c "yes | buildozer -v android debug"
-
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: license-plate-apk
-        path: bin/*.apk
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Build with Buildozer
+        uses: ArtemSBulgakov/buildozer-action@v1
+        with:
+          command: buildozer android debug
+          workdir: ./
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-plate-apk
+          path: ./bin/*.apk
+          
