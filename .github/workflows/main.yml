@@ -7,58 +7,19 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install system dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y git zip unzip openjdk-17-jdk autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
-
-      - name: Install buildozer
-        run: |
-          pip install --upgrade pip
-          pip install buildozer cython
-
-      - name: Use patched python-for-android (fixes 404 errors)
-        run: |
-          git clone --depth 1 --branch master https://github.com/opacam/python-for-android.git /tmp/p4a
-          mkdir -p /home/runner/.local/share/python-for-android
-          rm -rf /home/runner/.local/share/python-for-android
-          cp -r /tmp/p4a /home/runner/.local/share/python-for-android
-
-      - name: Accept Android SDK licenses
-        run: |
-          # Сначала Buildozer установит SDK, но sdkmanager ещё не в PATH.
-          # Поэтому запустим сборку принудительно для создания SDK, потом примем лицензии.
-          # Однако проще всего: создать пустую директорию SDK и запустить sdkmanager.
-          # Но Buildozer сам создаст SDK. Давайте после его первого запуска примем лицензии.
-          # Вместо этого: мы можем установить SDK заранее через sdkmanager. Но путь неизвестен.
-          # Альтернатива: использовать переменную окружения для автоматического принятия.
-          echo y | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses 2>/dev/null || true
-        env:
-          ANDROID_HOME: /home/runner/.buildozer/android/platform/android-sdk
-
-      - name: Configure buildozer.spec
-        run: |
-          echo "p4a.local_recipes = /home/runner/.local/share/python-for-android" >> buildozer.spec
-          echo "p4a.branch = master" >> buildozer.spec
-          echo "android.accept_sdk_license = True" >> buildozer.spec
-          echo "android.ndk = 25b" >> buildozer.spec
-          echo "android.ndk_api = 21" >> buildozer.spec
-          sed -i '/^android.sdk_path/d' buildozer.spec
-
-      - name: Build APK
-        run: buildozer -v android debug
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: license-plate-apk
-          path: bin/*.apk
+    - uses: actions/checkout@v4
+    
+    - name: Build APK with Buildozer
+      uses: ArtemSBulgakov/buildozer-action@v1
+      with:
+        command: buildozer android debug
+        workdir: .
+        buildozer_spec: buildozer.spec
+    
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: license-plate-apk
+        path: ./bin/*.apk
