@@ -1,26 +1,17 @@
-name: Build APK
+[app]
+title = Номера на фото
+package.name = licensplaterecognizer
+package.domain = org.yourcompany
+source.dir = .
+version = 0.1
+requirements = python3==3.11, kivy==2.2.1, requests
+orientation = portrait
+fullscreen = 0
+android.permissions = INTERNET, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE, CAMERA
+android.api = 30
+android.minapi = 21
+log_level = 2
+android.ndk = 25b
+android.ndk_api = 21
 
-on:
-  push:
-    branches: [ main, master ]
-  workflow_dispatch:
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - name: Install buildozer
-        run: |
-          pip install --upgrade pip
-          pip install buildozer cython
-      - name: Build APK
-        run: buildozer -v android debug
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: license-plate-apk
-          path: bin/*.apk
+[buildozer]
