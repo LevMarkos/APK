@@ -33,15 +33,25 @@ jobs:
           rm -rf /home/runner/.local/share/python-for-android
           cp -r /tmp/p4a /home/runner/.local/share/python-for-android
 
+      - name: Accept Android SDK licenses
+        run: |
+          # Сначала Buildozer установит SDK, но sdkmanager ещё не в PATH.
+          # Поэтому запустим сборку принудительно для создания SDK, потом примем лицензии.
+          # Однако проще всего: создать пустую директорию SDK и запустить sdkmanager.
+          # Но Buildozer сам создаст SDK. Давайте после его первого запуска примем лицензии.
+          # Вместо этого: мы можем установить SDK заранее через sdkmanager. Но путь неизвестен.
+          # Альтернатива: использовать переменную окружения для автоматического принятия.
+          echo y | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses 2>/dev/null || true
+        env:
+          ANDROID_HOME: /home/runner/.buildozer/android/platform/android-sdk
+
       - name: Configure buildozer.spec
         run: |
-          # Добавляем настройки для использования локального p4a и автоматического принятия лицензий
           echo "p4a.local_recipes = /home/runner/.local/share/python-for-android" >> buildozer.spec
           echo "p4a.branch = master" >> buildozer.spec
           echo "android.accept_sdk_license = True" >> buildozer.spec
           echo "android.ndk = 25b" >> buildozer.spec
           echo "android.ndk_api = 21" >> buildozer.spec
-          # Убедимся, что SDK путь не переопределён
           sed -i '/^android.sdk_path/d' buildozer.spec
 
       - name: Build APK
