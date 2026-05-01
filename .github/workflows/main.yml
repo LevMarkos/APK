@@ -43,7 +43,7 @@ jobs:
         export ANDROID_HOME=$HOME/sdk
         export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
         yes | sdkmanager --licenses
-        sdkmanager "platform-tools" "platforms;android-30" "build-tools;30.0.3" "build-tools;37.0.0"
+        sdkmanager "platform-tools" "platforms;android-30" "build-tools;30.0.3"
 
     - name: Setup Android NDK
       run: |
@@ -55,7 +55,7 @@ jobs:
 
     - name: Create buildozer.spec
       run: |
-        cat > buildozer.spec <<EOF
+        cat > buildozer.spec <<'EOF'
 [app]
 title = Номера на фото
 package.name = licensplaterecognizer
@@ -73,10 +73,10 @@ android.ndk = 25b
 android.ndk_api = 21
 android.build_tools = 30.0.3
 android.accept_sdk_license = True
-android.sdk_path = $HOME/sdk
-android.ndk_path = $HOME/.buildozer/android/platform/android-ndk-r25b
+android.sdk_path = /home/runner/sdk
+android.ndk_path = /home/runner/.buildozer/android/platform/android-ndk-r25b
 
-p4a.local_recipes = $HOME/.local/share/python-for-android
+p4a.local_recipes = /home/runner/.local/share/python-for-android
 p4a.branch = master
 
 [buildozer]
@@ -85,8 +85,8 @@ EOF
     - name: Build APK
       run: buildozer -v android debug
       env:
-        ANDROID_HOME: $HOME/sdk
-        ANDROID_SDK_ROOT: $HOME/sdk
+        ANDROID_HOME: /home/runner/sdk
+        ANDROID_SDK_ROOT: /home/runner/sdk
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
