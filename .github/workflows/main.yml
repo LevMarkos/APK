@@ -33,32 +33,60 @@ jobs:
         rm -rf ~/.local/share/python-for-android
         cp -r /tmp/p4a ~/.local/share/python-for-android
 
-    - name: Setup Android SDK and accept licenses
+    - name: Setup Android SDK (command line tools)
       run: |
-        mkdir -p /tmp/sdk/cmdline-tools
-        cd /tmp/sdk/cmdline-tools
+        mkdir -p $HOME/sdk/cmdline-tools
+        cd $HOME/sdk/cmdline-tools
         wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
         unzip -q commandlinetools-linux-9477386_latest.zip
         mv cmdline-tools latest
-        export ANDROID_SDK_ROOT=/tmp/sdk
-        export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin
+        export ANDROID_HOME=$HOME/sdk
+        export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
         yes | sdkmanager --licenses
-        sdkmanager "platform-tools" "platforms;android-30" "build-tools;30.0.3"
+        sdkmanager "platform-tools" "platforms;android-30" "build-tools;30.0.3" "build-tools;37.0.0"
 
-    - name: Configure buildozer.spec
+    - name: Setup Android NDK
       run: |
-        echo "p4a.local_recipes = ~/.local/share/python-for-android" >> buildozer.spec
-        echo "p4a.branch = master" >> buildozer.spec
-        echo "android.accept_sdk_license = True" >> buildozer.spec
-        echo "android.ndk = 25b" >> buildozer.spec
-        echo "android.ndk_api = 21" >> buildozer.spec
-        echo "android.build_tools = 30.0.3" >> buildozer.spec
-        sed -i '/^android.sdk_path/d' buildozer.spec
+        cd $HOME
+        wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
+        unzip -q android-ndk-r25b-linux.zip
+        mkdir -p .buildozer/android/platform
+        mv android-ndk-r25b .buildozer/android/platform/
+
+    - name: Create buildozer.spec
+      run: |
+        cat > buildozer.spec <<EOF
+[app]
+title = Номера на фото
+package.name = licensplaterecognizer
+package.domain = org.yourcompany
+source.dir = .
+version = 0.1
+requirements = python3==3.11, kivy==2.2.1, requests
+orientation = portrait
+fullscreen = 0
+android.permissions = INTERNET, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE, CAMERA
+android.api = 30
+android.minapi = 21
+log_level = 2
+android.ndk = 25b
+android.ndk_api = 21
+android.build_tools = 30.0.3
+android.accept_sdk_license = True
+android.sdk_path = $HOME/sdk
+android.ndk_path = $HOME/.buildozer/android/platform/android-ndk-r25b
+
+p4a.local_recipes = $HOME/.local/share/python-for-android
+p4a.branch = master
+
+[buildozer]
+EOF
 
     - name: Build APK
       run: buildozer -v android debug
       env:
-        ANDROID_HOME: /tmp/sdk
+        ANDROID_HOME: $HOME/sdk
+        ANDROID_SDK_ROOT: $HOME/sdk
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
