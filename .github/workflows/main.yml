@@ -33,14 +33,14 @@ jobs:
         rm -rf ~/.local/share/python-for-android
         cp -r /tmp/p4a ~/.local/share/python-for-android
 
-    - name: Setup Android SDK with legacy symlink
+    - name: Setup Android SDK (command line tools)
       run: |
         mkdir -p $HOME/sdk/cmdline-tools
         cd $HOME/sdk/cmdline-tools
         wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
         unzip -q commandlinetools-linux-9477386_latest.zip
         mv cmdline-tools latest
-        # Создаем символическую ссылку для совместимости (Buildozer ищет tools/bin/sdkmanager)
+        # Создаём символическую ссылку для совместимости со старыми инструментами (Buildozer ищет tools/bin/sdkmanager)
         ln -sf $HOME/sdk/cmdline-tools/latest $HOME/sdk/tools
         export ANDROID_HOME=$HOME/sdk
         export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
@@ -54,37 +54,6 @@ jobs:
         unzip -q android-ndk-r25b-linux.zip
         mkdir -p .buildozer/android/platform
         mv android-ndk-r25b .buildozer/android/platform/
-
-    - name: Create buildozer.spec (if missing)
-      run: |
-        if [ ! -f buildozer.spec ]; then
-          cat > buildozer.spec <<'EOF'
-[app]
-title = Номера на фото
-package.name = licensplaterecognizer
-package.domain = org.yourcompany
-source.dir = .
-version = 0.1
-requirements = python3==3.11, kivy==2.2.1, requests
-orientation = portrait
-fullscreen = 0
-android.permissions = INTERNET, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE, CAMERA
-android.api = 30
-android.minapi = 21
-log_level = 2
-android.ndk = 25b
-android.ndk_api = 21
-android.build_tools = 30.0.3
-android.accept_sdk_license = True
-android.sdk_path = /home/runner/sdk
-android.ndk_path = /home/runner/.buildozer/android/platform/android-ndk-r25b
-
-p4a.local_recipes = /home/runner/.local/share/python-for-android
-p4a.branch = master
-
-[buildozer]
-EOF
-        fi
 
     - name: Build APK
       run: buildozer -v android debug
